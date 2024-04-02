@@ -249,6 +249,8 @@ namespace daxa
         }
     };
 
+    using DeviceLoaderHook = void(*)(void*, void*);
+
     struct DeviceInfo
     {
         i32 (*selector)(DeviceProperties const & properties) = default_device_score;
@@ -262,6 +264,7 @@ namespace daxa
         u32 max_allowed_samplers = 400;
         u32 max_allowed_acceleration_structures = 10'000;
         SmallString name = {};
+        DeviceLoaderHook loader_hook = nullptr;
     };
 
     struct CommandSubmitInfo

@@ -1305,6 +1305,10 @@ auto daxa_ImplDevice::create(daxa_Instance instance, daxa_DeviceInfo const & inf
     {
         return std::bit_cast<daxa_Result>(result);
     }
+    if (info.loader_hook)
+    {
+	    info.loader_hook(instance->vk_instance, self->vk_device);
+    }
 
     // Dynamic state:
     self->vkCmdSetRasterizationSamplesEXT = r_cast<PFN_vkCmdSetRasterizationSamplesEXT>(vkGetDeviceProcAddr(self->vk_device, "vkCmdSetRasterizationSamplesEXT"));

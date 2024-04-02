@@ -17,6 +17,8 @@ namespace daxa
         static inline constexpr InstanceFlags PARENT_MUST_OUTLIVE_CHILD = {0x00000002};
     };
 
+    using InstanceLoaderHook = void (*)(void *);
+
     struct InstanceInfo
     {
         InstanceFlags flags =
@@ -24,6 +26,7 @@ namespace daxa
             InstanceFlagBits::PARENT_MUST_OUTLIVE_CHILD;
         SmallString engine_name = "daxa";
         SmallString app_name = "daxa app";
+        InstanceLoaderHook loader_hook = nullptr;
     };
 
     struct DAXA_EXPORT_CXX Instance final : ManagedPtr<Instance, daxa_Instance>

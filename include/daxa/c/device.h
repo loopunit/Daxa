@@ -231,6 +231,7 @@ typedef enum
 } daxa_DeviceFlagBits;
 
 typedef uint32_t daxa_DeviceFlags;
+typedef void(*daxa_DeviceLoaderHook)(void*, void*);
 
 typedef struct
 {
@@ -241,6 +242,7 @@ typedef struct
     uint32_t max_allowed_samplers;
     uint32_t max_allowed_acceleration_structures;
     daxa_SmallString name;
+    daxa_DeviceLoaderHook loader_hook;
 } daxa_DeviceInfo;
 
 static daxa_DeviceInfo const DAXA_DEFAULT_DEVICE_INFO = {
@@ -251,6 +253,7 @@ static daxa_DeviceInfo const DAXA_DEFAULT_DEVICE_INFO = {
     .max_allowed_samplers = 400,
     .max_allowed_acceleration_structures = 10000,
     .name = DAXA_ZERO_INIT,
+    .loader_hook = 0,
 };
 
 typedef struct

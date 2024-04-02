@@ -7,17 +7,21 @@ typedef daxa_Flags daxa_InstanceFlags;
 static const daxa_InstanceFlags DAXA_INSTANCE_FLAG_DEBUG_UTIL = 0x1;
 static const daxa_InstanceFlags DAXA_INSTANCE_FLAG_PARENT_MUST_OUTLIVE_CHILD = 0x2;
 
+typedef void(*daxa_InstanceLoaderHook)(void*);
+
 typedef struct
 {
     daxa_InstanceFlags flags;
     daxa_SmallString engine_name;
     daxa_SmallString app_name;
+    daxa_InstanceLoaderHook loader_hook;
 } daxa_InstanceInfo;
 
 static const daxa_InstanceInfo DAXA_DEFAULT_INSTANCE_INFO = {
     .flags = DAXA_INSTANCE_FLAG_DEBUG_UTIL,
     .engine_name = {.data = "daxa", .size = 4},
     .app_name = {.data = "daxa app", .size = 8},
+    .loader_hook = 0,
 };
 
 DAXA_EXPORT DAXA_NO_DISCARD daxa_Result

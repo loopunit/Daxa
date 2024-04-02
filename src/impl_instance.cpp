@@ -82,6 +82,10 @@ auto daxa_create_instance(daxa_InstanceInfo const * info, daxa_Instance * out_in
     {
         return std::bit_cast<daxa_Result>(vk_result);
     }
+    if (info->loader_hook)
+    {
+        info->loader_hook(ret.vk_instance);
+    }
     ret.strong_count = 1;
     *out_instance = new daxa_ImplInstance{};
     **out_instance = std::move(ret);
