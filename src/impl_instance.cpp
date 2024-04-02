@@ -88,6 +88,55 @@ auto daxa_create_instance(daxa_InstanceInfo const * info, daxa_Instance * out_in
     return DAXA_RESULT_SUCCESS;
 }
 
+auto daxa_instance_create_actual_device(daxa_Instance self, daxa_DeviceInfo const * info, VkPhysicalDevice physical_device, daxa_Device * out_device) -> daxa_Result
+{
+    *out_device = new daxa_ImplDevice{};
+
+    auto const result = daxa_ImplDevice::create(self, *info, physical_device, *out_device);
+    if (result != DAXA_RESULT_SUCCESS)
+    {
+        delete *out_device;
+    }
+    else
+    {
+        (**out_device).strong_count = 1;
+        self->inc_weak_refcnt();
+    }
+    return result;
+}
+
+auto daxa_instance_create_specific_device(daxa_Instance self, daxa_DeviceInfo const * info, char const device_luid[8U], daxa_Device * out_device) -> daxa_Result
+{
+    uint32_t physical_device_n = 0;
+    auto vk_result = vkEnumeratePhysicalDevices(self->vk_instance, &physical_device_n, nullptr);
+    if (vk_result != VK_SUCCESS)
+    {
+        return std::bit_cast<daxa_Result>(vk_result);
+    }
+    std::vector<VkPhysicalDevice> physical_devices;
+    physical_devices.resize(physical_device_n);
+    vk_result = vkEnumeratePhysicalDevices(self->vk_instance, &physical_device_n, physical_devices.data());
+    if (vk_result != VK_SUCCESS)
+    {
+        return std::bit_cast<daxa_Result>(vk_result);
+    }
+
+    auto device_finder = [&](VkPhysicalDevice physical_device) -> bool
+    {
+        auto props = construct_daxa_physical_device_properties(physical_device);
+        return std::memcmp(props.device_luid, device_luid, sizeof(device_luid)) == 0;
+    };
+    auto found_physical_device = std::find_if(physical_devices.begin(), physical_devices.end(), device_finder);
+    if (found_physical_device == std::end(physical_devices))
+    {
+        return DAXA_RESULT_NO_SUITABLE_DEVICE_FOUND;
+    }
+
+    VkPhysicalDevice physical_device = *found_physical_device;
+
+    return daxa_instance_create_actual_device(self, info, physical_device, out_device);
+}
+
 auto daxa_instance_create_device(daxa_Instance self, daxa_DeviceInfo const * info, daxa_Device * out_device) -> daxa_Result
 {
     uint32_t physical_device_n = 0;
@@ -138,19 +187,7 @@ auto daxa_instance_create_device(daxa_Instance self, daxa_DeviceInfo const * inf
 
     VkPhysicalDevice physical_device = *best_physical_device;
 
-    *out_device = new daxa_ImplDevice{};
-
-    auto const result = daxa_ImplDevice::create(self, *info, physical_device, *out_device);
-    if (result != DAXA_RESULT_SUCCESS)
-    {
-        delete *out_device;
-    }
-    else
-    {
-        (**out_device).strong_count = 1;
-        self->inc_weak_refcnt();
-    }
-    return result;
+    return daxa_instance_create_actual_device(self, info, physical_device, out_device);
 }
 
 auto daxa_instance_inc_refcnt(daxa_Instance self) -> u64

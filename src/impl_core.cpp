@@ -186,17 +186,27 @@ auto construct_daxa_physical_device_properties(VkPhysicalDevice physical_device)
         }
     }
 
+    VkPhysicalDeviceIDProperties vk_physical_device_id_properties = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES,
+        .pNext = pNextChain,
+    };
+    pNextChain = &vk_physical_device_id_properties;
+
     VkPhysicalDeviceProperties2 vk_physical_device_properties2 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
         .pNext = pNextChain,
     };
 
     vkGetPhysicalDeviceProperties2(physical_device, &vk_physical_device_properties2);
-    // physical device properties are ABI compatible UP TO the mesh_shader_properties field.
+    // physical device properties are ABI compatible UP TO the device_luid field.
     std::memcpy(
         &ret,
         r_cast<std::byte const *>(&vk_physical_device_properties2) + sizeof(void *) * 2 /* skip sType and pNext */,
-        offsetof(daxa_DeviceProperties, mesh_shader_properties));
+        offsetof(daxa_DeviceProperties, device_luid));
+    std::memcpy(
+        &ret.device_luid,
+        r_cast<std::byte const *>(vk_physical_device_id_properties.deviceLUID),
+        sizeof(ret.device_luid));
     if (ray_tracing_pipeline_supported)
     {
         ret.ray_tracing_pipeline_properties.has_value = 1;
