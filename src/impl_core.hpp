@@ -22,9 +22,15 @@
 #endif
 
 #if defined(_WIN32)
+#ifndef VK_USE_PLATFORM_WIN32_KHR
 #define VK_USE_PLATFORM_WIN32_KHR
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #elif defined(__linux__)
 #if DAXA_BUILT_WITH_X11
 #include <X11/Xlib.h>
@@ -34,7 +40,9 @@
 // NOTE(grundlett) Somehow the Vulkan SDK may not include these
 //    - to fix this we do it manually here
 #include <wayland-client.h>
+#ifndef VK_USE_PLATFORM_WAYLAND_KHR
 #define VK_USE_PLATFORM_WAYLAND_KHR
+#endif
 #endif
 #endif
 
