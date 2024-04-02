@@ -46,6 +46,8 @@
 #endif
 #endif
 
+#include <volk.h>
+
 // INCLUDE ORDER MUST STAY LIKE THIS:
 #include <daxa/daxa.hpp>
 #include <vulkan/vulkan.h>
