@@ -24,6 +24,9 @@ DAXA_EXPORT DAXA_NO_DISCARD daxa_Result
 daxa_create_instance(daxa_InstanceInfo const * info, daxa_Instance * out_instance);
 
 DAXA_EXPORT DAXA_NO_DISCARD daxa_Result
+daxa_instance_create_specific_device(daxa_Instance instance, daxa_DeviceInfo const * info, const char device_luid[8U], daxa_Device * out_device);
+
+DAXA_EXPORT DAXA_NO_DISCARD daxa_Result
 daxa_instance_create_device(daxa_Instance instance, daxa_DeviceInfo const * info, daxa_Device * out_device);
 
 // Returns previous ref count.

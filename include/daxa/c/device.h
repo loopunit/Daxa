@@ -205,6 +205,7 @@ typedef struct
     char device_name[256U];
     char pipeline_cache_uuid[16U];
     daxa_DeviceLimits limits;
+    char device_luid[8U];
     daxa_Optional(daxa_MeshShaderProperties) mesh_shader_properties;
     daxa_Optional(daxa_RayTracingPipelineProperties) ray_tracing_pipeline_properties;
     daxa_Optional(daxa_AccelerationStructureProperties) acceleration_structure_properties;

@@ -30,6 +30,7 @@ namespace daxa
     {
         Instance() = default;
 
+        [[nodiscard]] auto create_specific_device(DeviceInfo const & device_info, const char device_luid[8U]) -> Device;
         [[nodiscard]] auto create_device(DeviceInfo const & device_info) -> Device;
 
         /// THREADSAFETY:

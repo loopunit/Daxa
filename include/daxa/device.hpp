@@ -200,6 +200,7 @@ namespace daxa
         u8 device_name[256U] = {};
         u8 pipeline_cache_uuid[16U] = {};
         DeviceLimits limits = {};
+		u8 device_luid[8U] = {};
         Optional<MeshShaderDeviceProperties> mesh_shading_properties = {};
         Optional<RayTracingPipelineProperties> ray_tracing_properties = {};
         Optional<AccelerationStructureProperties> acceleration_structure_properties = {};

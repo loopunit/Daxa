@@ -163,6 +163,18 @@ namespace daxa
         return ret;
     }
 
+    auto Instance::create_specific_device(DeviceInfo const & info, const char device_luid[8U]) -> Device
+    {
+        Device ret = {};
+        check_result(daxa_instance_create_specific_device(
+                         r_cast<daxa_Instance>(this->object),
+                         r_cast<daxa_DeviceInfo const *>(&info),
+                         device_luid,
+                         r_cast<daxa_Device *>(&ret)),
+                     "failed to create device");
+        return ret;
+    }
+
     auto Instance::create_device(DeviceInfo const & info) -> Device
     {
         Device ret = {};
