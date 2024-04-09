@@ -5,6 +5,7 @@
 #include "impl_pipeline_manager.hpp"
 
 #include <tuple>
+#include <cassert>
 
 #if DAXA_BUILT_WITH_UTILS_PIPELINE_MANAGER_GLSLANG
 static constexpr TBuiltInResource DAXA_DEFAULT_BUILTIN_RESOURCE = {
