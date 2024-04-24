@@ -24,6 +24,7 @@ namespace daxa
         NativeWindowHandle native_window;
         NativeWindowPlatform native_window_platform;
         i32 (*surface_format_selector)(Format) = default_format_score;
+        Format explicit_format = Format::UNDEFINED;
         PresentMode present_mode = PresentMode::FIFO;
         PresentOp present_operation = PresentOp::IDENTITY;
         ImageUsageFlags image_usage = {};

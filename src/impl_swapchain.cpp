@@ -82,7 +82,10 @@ auto daxa_dvc_create_swapchain(daxa_Device device, daxa_SwapchainInfo const * in
         return ret.info.surface_format_selector(std::bit_cast<Format>(a.format)) <
                ret.info.surface_format_selector(std::bit_cast<Format>(b.format));
     };
-    auto best_format = std::max_element(surface_formats.begin(), surface_formats.end(), format_comparator);
+    auto best_format = (ret.info.explicit_format != Format::UNDEFINED)
+                           ? std::find_if(surface_formats.begin(), surface_formats.end(), [&](auto const & vk_fmt)
+                                          { return (std::bit_cast<Format>(vk_fmt.format) == ret.info.explicit_format); })
+                           : std::max_element(surface_formats.begin(), surface_formats.end(), format_comparator);
     if (best_format == surface_formats.end())
     {
         ret.full_cleanup();
