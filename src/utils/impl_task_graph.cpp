@@ -2278,39 +2278,48 @@ namespace daxa
     {
         usize transient_resource_count = 0;
         usize max_alignment_requirement = 0;
-        for (auto & global_image : global_image_infos)
+        for (auto & permutation : permutations)
         {
-            if (!global_image.is_persistent())
+            for (u32 image_i = 0; image_i < permutation.image_infos.size(); ++image_i)
             {
-                transient_resource_count += 1;
-                auto & transient_image = daxa::get<PermIndepTaskImageInfo::Transient>(global_image.task_image_data);
-                ImageInfo const image_info = {
-                    .dimensions = transient_image.info.dimensions,
-                    .format = transient_image.info.format,
-                    .size = transient_image.info.size,
-                    .mip_level_count = transient_image.info.mip_level_count,
-                    .array_layer_count = transient_image.info.array_layer_count,
-                    .sample_count = transient_image.info.sample_count,
-                    .usage = ImageUsageFlagBits::SHADER_STORAGE,
-                    .allocate_info = MemoryFlagBits::DEDICATED_MEMORY,
-                    .name = "Dummy to figure mem requirements",
-                };
-                transient_image.memory_requirements = info.device.get_memory_requirements({image_info});
-                max_alignment_requirement = std::max(transient_image.memory_requirements.alignment, max_alignment_requirement);
+                PerPermTaskImage & permut_image = permutation.image_infos[image_i];
+                PermIndepTaskImageInfo & global_image = global_image_infos[image_i];
+                if (!global_image.is_persistent())
+                {
+                    transient_resource_count += 1;
+                    TaskTransientImageInfo trans_img_info = daxa::get<PermIndepTaskImageInfo::Transient>(global_image.task_image_data).info;
+                    ImageInfo image_info{
+                        // .flags = trans_img_info.flags,
+                        .dimensions = trans_img_info.dimensions,
+                        .format = trans_img_info.format,
+                        .size = trans_img_info.size,
+                        .mip_level_count = trans_img_info.mip_level_count,
+                        .array_layer_count = trans_img_info.array_layer_count,
+                        .sample_count = trans_img_info.sample_count,
+                        .usage = permut_image.usage,
+                        .allocate_info = MemoryFlagBits::DEDICATED_MEMORY,
+                        .name = "Dummy to figure mem requirements",
+                    };
+                    permut_image.memory_requirements = info.device.get_memory_requirements({image_info});
+                    max_alignment_requirement = std::max(permut_image.memory_requirements.alignment, max_alignment_requirement);
+                }
             }
-        }
-        for (auto & global_buffer : global_buffer_infos)
-        {
-            if (!global_buffer.is_persistent())
+            for (u32 buffer_i = 0; buffer_i < permutation.buffer_infos.size(); ++buffer_i)
             {
-                transient_resource_count += 1;
-                auto & transient_buffer = daxa::get<PermIndepTaskBufferInfo::Transient>(global_buffer.task_buffer_data);
-                BufferInfo const buffer_info = {
-                    .size = transient_buffer.info.size,
-                    .allocate_info = MemoryFlagBits::DEDICATED_MEMORY,
-                    .name = "Dummy to figure mem requirements"};
-                transient_buffer.memory_requirements = info.device.get_memory_requirements({buffer_info});
-                max_alignment_requirement = std::max(transient_buffer.memory_requirements.alignment, max_alignment_requirement);
+                PerPermTaskBuffer & permut_buffer = permutation.buffer_infos[buffer_i];
+                PermIndepTaskBufferInfo & global_buffer = global_buffer_infos[buffer_i];
+                if (!global_buffer.is_persistent())
+                {
+                    transient_resource_count += 1;
+                    TaskTransientBufferInfo trans_buf_info = daxa::get<PermIndepTaskBufferInfo::Transient>(global_buffer.task_buffer_data).info;
+                    BufferInfo buffer_info{
+                        .size = trans_buf_info.size,
+                        .allocate_info = MemoryFlagBits::DEDICATED_MEMORY,
+                        .name = "Dummy to figure mem requirements",
+                    };
+                    permut_buffer.memory_requirements = info.device.get_memory_requirements({buffer_info});
+                    max_alignment_requirement = std::max(permut_buffer.memory_requirements.alignment, max_alignment_requirement);
+                }
             }
         }
         if (transient_resource_count == 0)
@@ -2458,15 +2467,11 @@ namespace daxa
                 MemoryRequirements mem_requirements;
                 if (resource_lifetime.is_image)
                 {
-                    mem_requirements = daxa::get<PermIndepTaskImageInfo::Transient>(
-                                           global_image_infos.at(resource_lifetime.resource_idx).task_image_data)
-                                           .memory_requirements;
+                    mem_requirements = permutation.image_infos.at(resource_lifetime.resource_idx).memory_requirements;
                 }
                 else
                 {
-                    mem_requirements = daxa::get<PermIndepTaskBufferInfo::Transient>(
-                                           global_buffer_infos.at(resource_lifetime.resource_idx).task_buffer_data)
-                                           .memory_requirements;
+                    mem_requirements = permutation.buffer_infos.at(resource_lifetime.resource_idx).memory_requirements;
                 }
                 // Go through all memory block states in which this resource is alive and try to find a spot for it
                 u8 const resource_lifetime_duration = static_cast<u8>(resource_lifetime.end_batch - resource_lifetime.start_batch + 1);
@@ -3430,7 +3435,7 @@ namespace daxa
             print_lifetime(start_idx, end_idx);
             fmt::format_to(std::back_inserter(out), "  allocation offset: {} allocation size: {} task resource name: {}\n",
                            perm_task_image.allocation_offset,
-                           daxa::get<PermIndepTaskImageInfo::Transient>(global_image_infos.at(perm_image_idx).task_image_data).memory_requirements.size,
+                           0, // TODO(msakmary)
                            global_image_infos.at(perm_image_idx).get_name());
         }
         for (u32 perm_buffer_idx = 0; perm_buffer_idx < permutation.buffer_infos.size(); perm_buffer_idx++)
@@ -3449,7 +3454,7 @@ namespace daxa
             print_lifetime(start_idx, end_idx);
             fmt::format_to(std::back_inserter(out), "  allocation offset: {} allocation size: {} task resource name: {}\n",
                            perm_task_buffer.allocation_offset,
-                           daxa::get<PermIndepTaskBufferInfo::Transient>(global_buffer_infos.at(perm_buffer_idx).task_buffer_data).memory_requirements.size,
+                           0, // TODO(msakmary)
                            global_buffer_infos.at(perm_buffer_idx).get_name());
         }
     }
