@@ -350,6 +350,14 @@ namespace daxa
         {
             this->enable_debug_info = other.enable_debug_info;
         }
+        if (!this->create_flags.has_value())
+        {
+            this->create_flags = other.create_flags;
+        }
+        if (!this->required_subgroup_size.has_value())
+        {
+            this->required_subgroup_size = other.required_subgroup_size;
+        }
 
         this->root_paths.insert(this->root_paths.begin(), other.root_paths.begin(), other.root_paths.end());
         this->defines.insert(this->defines.end(), other.defines.begin(), other.defines.end());
@@ -535,6 +543,11 @@ namespace daxa
                 final_shader_info->push_back(daxa::ShaderInfo{
                     .byte_code = spv_results->back().value().data(),
                     .byte_code_size = static_cast<u32>(spv_results->back().value().size()),
+                    .create_flags = shader_compile_info.compile_options.create_flags.value_or(ShaderCreateFlagBits::NONE),
+                    .required_subgroup_size = 
+                        shader_compile_info.compile_options.required_subgroup_size.has_value() ? 
+                        Optional{shader_compile_info.compile_options.required_subgroup_size.value()} : 
+                        daxa::None,
                     .entry_point = {shader_compile_info.compile_options.entry_point.value()},
                 });
             }
@@ -590,7 +603,12 @@ namespace daxa
         (*pipe_result.pipeline_ptr) = this->info.device.create_compute_pipeline({
             .shader_info = {
                 .byte_code = spirv_result.value().data(),
-                .byte_code_size = static_cast<u32>(spirv_result.value().size()),
+                .byte_code_size = static_cast<u32>(spirv_result.value().size()),                    
+                .create_flags = a_info.shader_info.compile_options.create_flags.value_or(ShaderCreateFlagBits::NONE),
+                .required_subgroup_size = 
+                    a_info.shader_info.compile_options.required_subgroup_size.has_value() ? 
+                    Optional{a_info.shader_info.compile_options.required_subgroup_size.value()} : 
+                    daxa::None,
                 .entry_point = entry_point,
             },
             .push_constant_size = a_info.push_constant_size,
@@ -659,7 +677,12 @@ namespace daxa
                 }
                 *final_shader_info = daxa::ShaderInfo{
                     .byte_code = spv_result->value().data(),
-                    .byte_code_size = static_cast<u32>(spv_result->value().size()),
+                    .byte_code_size = static_cast<u32>(spv_result->value().size()),                    
+                    .create_flags = pipe_result_shader_info->value().compile_options.create_flags.value_or(ShaderCreateFlagBits::NONE),
+                    .required_subgroup_size = 
+                        pipe_result_shader_info->value().compile_options.required_subgroup_size.has_value() ? 
+                        Optional{pipe_result_shader_info->value().compile_options.required_subgroup_size.value()} : 
+                        daxa::None,
                 };
                 if (pipe_result_shader_info->value().compile_options.language != ShaderLanguage::SLANG)
                 {
@@ -953,7 +976,16 @@ namespace daxa
             {
                 reloaded = true;
                 auto new_pipeline = create_raster_pipeline(compile_info);
-                if (new_pipeline.is_ok())
+                bool is_valid = true;
+                if (this->info.register_null_pipelines_when_first_compile_fails)
+                {
+                    is_valid = new_pipeline.is_ok() && new_pipeline.value().pipeline_ptr->is_valid();
+                }
+                else
+                {
+                    is_valid = new_pipeline.is_ok();
+                }
+                if (is_valid)
                 {
                     *pipeline = std::move(*new_pipeline.value().pipeline_ptr);
                 }
@@ -970,7 +1002,16 @@ namespace daxa
             {
                 reloaded = true;
                 auto new_pipeline = create_ray_tracing_pipeline(compile_info);
-                if (new_pipeline.is_ok())
+                bool is_valid = true;
+                if (this->info.register_null_pipelines_when_first_compile_fails)
+                {
+                    is_valid = new_pipeline.is_ok() && new_pipeline.value().pipeline_ptr->is_valid();
+                }
+                else
+                {
+                    is_valid = new_pipeline.is_ok();
+                }
+                if (is_valid)
                 {
                     *pipeline = std::move(*new_pipeline.value().pipeline_ptr);
                 }
@@ -1235,7 +1276,7 @@ namespace daxa
 
             Result<std::vector<u32>> ret = Result<std::vector<u32>>("No shader was compiled");
 
-            assert(shader_info.compile_options.language.has_value() && "How did this happen? You mustn't provide a nullopt for the language");
+            DAXA_DBG_ASSERT_TRUE_M(shader_info.compile_options.language.has_value(), "How did this happen? You mustn't provide a nullopt for the language");
 
             DAXA_DBG_ASSERT_TRUE_M(shader_info.compile_options.language.has_value(), "You must have a shader language set when compiling GLSL");
             switch (shader_info.compile_options.language.value())
@@ -1654,7 +1695,7 @@ namespace daxa
         for (int32_t dependency_i = 0; dependency_i < dependency_n; ++dependency_i)
         {
             auto const * const dep_path = slangRequest->getDependencyFilePath(dependency_i);
-            if (std::strcmp(dep_path, "unknown") != 0)
+            if (std::strcmp(dep_path, "_daxa_slang_main") != 0)
             {
                 current_observed_hotload_files->insert({dep_path, std::chrono::file_clock::now()});
             }

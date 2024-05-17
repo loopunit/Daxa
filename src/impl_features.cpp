@@ -69,12 +69,6 @@ namespace daxa
             .variablePointers = VK_TRUE,              // SLANG WANTS THIS
         };
         this->chain = r_cast<void *>(&this->variable_pointers);
-        this->dynamic_state3 = {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT,
-            .pNext = chain,
-            .extendedDynamicState3RasterizationSamples = VK_TRUE,
-        };
-        this->chain = r_cast<void *>(&this->dynamic_state3);
         this->buffer_device_address = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
             .pNext = chain,
@@ -132,12 +126,29 @@ namespace daxa
             .timelineSemaphore = VK_TRUE,
         };
         this->chain = r_cast<void *>(&this->timeline_semaphore);
+        this->subgroup_size_control = {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES,
+            .pNext = this->chain,
+            .subgroupSizeControl = VK_TRUE,
+            .computeFullSubgroups = VK_TRUE,
+        };
+        this->chain = r_cast<void *>(&this->subgroup_size_control);
         this->scalar_layout = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES,
             .pNext = this->chain,
             .scalarBlockLayout = VK_TRUE,
         };
         this->chain = r_cast<void *>(&this->scalar_layout);
+
+        if ((info.flags & DAXA_DEVICE_FLAG_DYNAMIC_STATE_3) != 0u)
+        {
+            this->dynamic_state3 = {
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT,
+                .pNext = chain,
+                .extendedDynamicState3RasterizationSamples = VK_TRUE,
+            };
+            this->chain = r_cast<void *>(&this->dynamic_state3);
+        }
         if ((info.flags & DAXA_DEVICE_FLAG_SHADER_FLOAT16) != 0u || (info.flags & DAXA_DEVICE_FLAG_SHADER_INT8) != 0u)
         {
             this->shader_float16_int8 = {
@@ -253,6 +264,27 @@ namespace daxa
                 this->chain = r_cast<void *>(&this->ray_tracing_invocation_reorder.value());
             }
         }
+        if((info.flags & DAXA_DEVICE_FLAG_SHADER_ATOMIC_FLOAT) != 0u)
+        {
+            // NOTE: This is a very new extension and might not be supported by all hardware.
+            this->shader_atomic_float = {
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT,
+                .pNext = this->chain,
+                .shaderBufferFloat32Atomics = VK_TRUE,
+                .shaderBufferFloat32AtomicAdd = VK_TRUE,
+                .shaderBufferFloat64Atomics = VK_FALSE, // No 64 bit support in daxa.
+                .shaderBufferFloat64AtomicAdd = VK_FALSE, // No 64 bit support in daxa.
+                .shaderSharedFloat32Atomics = VK_TRUE,
+                .shaderSharedFloat32AtomicAdd = VK_TRUE,
+                .shaderSharedFloat64Atomics = VK_FALSE, // No 64 bit support in daxa.
+                .shaderSharedFloat64AtomicAdd = VK_FALSE, // No 64 bit support in daxa.
+                .shaderImageFloat32Atomics = VK_TRUE,
+                .shaderImageFloat32AtomicAdd = VK_TRUE,
+                .sparseImageFloat32Atomics = VK_FALSE, // No sparse support in daxa.
+                .sparseImageFloat32AtomicAdd = VK_FALSE, // No sparse support in daxa.
+            };
+            this->chain = r_cast<void *>(&this->shader_atomic_float);
+        }
     }
 
     void PhysicalDeviceExtensionList::initialize(daxa_DeviceInfo info, daxa_DeviceProperties const & props)
@@ -260,7 +292,10 @@ namespace daxa
         // NOTE(pahrens): Make sure to never exceed EXTENSION_LIST_MAX!
         this->size = 0;
         this->data[size++] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        this->data[size++] = {VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME};
+        if ((info.flags & DAXA_DEVICE_FLAG_DYNAMIC_STATE_3) != 0u)
+        {
+            this->data[size++] = {VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME};
+        }
         if ((info.flags & DAXA_DEVICE_FLAG_CONSERVATIVE_RASTERIZATION) != 0u)
         {
             this->data[size++] = {VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME};
@@ -292,6 +327,10 @@ namespace daxa
         if ((info.flags & DAXA_DEVICE_FLAG_ROBUST_BUFFER_ACCESS) != 0u || (info.flags & DAXA_DEVICE_FLAG_ROBUST_IMAGE_ACCESS) != 0u)
         {
             this->data[size++] = {VK_EXT_ROBUSTNESS_2_EXTENSION_NAME};
+        }
+        if((info.flags & DAXA_DEVICE_FLAG_SHADER_ATOMIC_FLOAT) != 0u)
+        {
+            this->data[size++] = {VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME};
         }
     }
 } // namespace daxa
