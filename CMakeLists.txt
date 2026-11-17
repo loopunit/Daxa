@@ -228,3 +228,41 @@ if(DAXA_ENABLE_TOOLS)
     target_compile_definitions(daxa_tools_compile_resource_viewer_shaders PRIVATE DAXA_COMPILE_RESOURCE_VIEWER_SHADERS=true)
     target_link_libraries(daxa_tools_compile_resource_viewer_shaders PRIVATE daxa::daxa GPUOpen::VulkanMemoryAllocator Vulkan::Vulkan)
 endif()
+
+if (DAXA_ENABLE_INSTALL)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/daxa)
+
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    install(TARGETS daxa EXPORT daxa-targets
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    install(EXPORT daxa-targets
+        FILE daxaTargets.cmake
+        NAMESPACE daxa::
+        DESTINATION ${INSTALL_CONFIGDIR}
+    )
+
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/daxaConfigVersion.cmake
+        COMPATIBILITY AnyNewerVersion
+    )
+
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/daxaConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/daxaConfig.cmake
+        INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+    )
+
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/daxaConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/daxaConfigVersion.cmake
+        DESTINATION ${INSTALL_CONFIGDIR}
+    )
+endif()
