@@ -2,6 +2,7 @@ find_package(Vulkan REQUIRED)
 
 include(FetchContent)
 
+find_package(VulkanMemoryAllocator CONFIG)
 if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
     FetchContent_Declare(
         vma
@@ -12,22 +13,29 @@ if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
     FetchContent_MakeAvailable(vma)
 endif()
 
-if (DAXA_ENABLE_UTILS_PIPELINE_MANAGER_GLSLANG AND NOT TARGET glslang::glslang)
-    option(ENABLE_OPT "" OFF)
-    set(ENABLE_HLSL OFF CACHE BOOL "" FORCE)
-    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "" FORCE)
-    set(ENABLE_SPVREMAPPER OFF CACHE BOOL "" FORCE)
-    set(GLSLANG_TESTS OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        glslang
-        GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
-        GIT_TAG        5398d55e33dff7d26fecdd2c35808add986c558c
-        #SYSTEM
-    )
-    FetchContent_MakeAvailable(glslang)
+if (DAXA_ENABLE_UTILS_PIPELINE_MANAGER_GLSLANG)
+    find_package(glslang CONFIG)
+    if (NOT TARGET glslang::glslang)
+        option(ENABLE_OPT "" OFF)
+        set(ENABLE_HLSL OFF CACHE BOOL "" FORCE)
+        set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "" FORCE)
+        set(ENABLE_SPVREMAPPER OFF CACHE BOOL "" FORCE)
+        set(GLSLANG_TESTS OFF CACHE BOOL "" FORCE)
+        FetchContent_Declare(
+            glslang
+            GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+            GIT_TAG        5398d55e33dff7d26fecdd2c35808add986c558c
+            #SYSTEM
+        )
+        FetchContent_MakeAvailable(glslang)
+    endif()
 endif()
 
 if (DAXA_ENABLE_TESTS AND NOT TARGET glfw)
+    if (DAXA_FORCE_WAYLAND)
+        option(GLFW_BUILD_WAYLAND "" ON)
+        option(GLFW_BUILD_X11 "" OFF)
+    endif()
     option(GLFW_BUILD_TESTS "" OFF)
     option(GLFW_BUILD_DOCS "" OFF)
     option(GLFW_INSTALL "" OFF)
