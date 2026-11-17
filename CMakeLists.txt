@@ -165,16 +165,18 @@ target_include_directories(daxa
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    find_package(X11)
-    if(X11_FOUND)
-        target_compile_definitions(daxa
-            PUBLIC
-            DAXA_BUILT_WITH_X11=true
-        )
-        target_link_libraries(daxa
-            PRIVATE
-            ${X11_LIBRARIES}
-        )
+    if(NOT DAXA_FORCE_WAYLAND)
+        find_package(X11)
+        if(X11_FOUND)
+            target_compile_definitions(daxa
+                PUBLIC
+                DAXA_BUILT_WITH_X11=true
+            )
+            target_link_libraries(daxa
+                PRIVATE
+                ${X11_LIBRARIES}
+            )
+        endif()
     endif()
 
     find_package(PkgConfig)
