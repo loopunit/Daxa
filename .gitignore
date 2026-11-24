@@ -463,3 +463,6 @@ vcpkg/
 
 wiki/daxa-book/book/*
 preproc
+.devenv/*
+devenv.lock
+install/*

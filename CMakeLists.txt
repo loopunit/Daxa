@@ -3,12 +3,13 @@ cmake_minimum_required(VERSION 3.28)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/warnings.cmake")
 
 if(DAXA_ENABLE_UTILS_TASK_GRAPH)
-    set(DAXA_ENABLE_UTILS_MEM true)
+set(DAXA_ENABLE_UTILS_MEM true)
 endif()
 
 project(daxa VERSION 3.0.2)
 
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/deps.cmake")
+include(FetchContent)
+#include("${CMAKE_CURRENT_LIST_DIR}/cmake/deps.cmake")
 
 if(DAXA_ENABLE_STATIC_ANALYSIS)
     set(CPPCHECK_TEMPLATE "gcc")
@@ -100,14 +101,54 @@ if(DAXA_ENABLE_UTILS_FSR2)
         ffx_sdk::ffx_sdk
     )
 endif()
+
 if(DAXA_ENABLE_UTILS_IMGUI)
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui
+        GIT_TAG        v1.92.6-docking
+    )
+
+    FetchContent_GetProperties(imgui)
+    if(NOT imgui_POPULATED)
+        FetchContent_MakeAvailable(imgui)
+
+        target_sources(daxa
+        PRIVATE
+            ${imgui_SOURCE_DIR}/imgui.cpp
+            ${imgui_SOURCE_DIR}/imgui_demo.cpp
+            ${imgui_SOURCE_DIR}/imgui_draw.cpp
+            ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+            ${imgui_SOURCE_DIR}/imgui_tables.cpp)
+
+        target_include_directories(daxa SYSTEM
+        PRIVATE
+            ${imgui_SOURCE_DIR}
+            ${imgui_SOURCE_DIR}/backends
+            ${Vulkan_INCLUDE_DIRS})
+        if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
+            target_compile_options(daxa PRIVATE -Wno-nontrivial-memcall)
+        endif()
+
+        if(DAXA_ENABLE_GLFW)
+            if(TARGET glfw)
+                target_sources(daxa PRIVATE ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
+                target_link_libraries(daxa PRIVATE glfw)
+                target_include_directories(daxa SYSTEM PUBLIC ${glfw_SOURCE_DIR}/include)
+            endif()
+        endif()
+
+        if(DAXA_ENABLE_SDL3)
+            find_package(SDL3 CONFIG REQUIRED)
+            target_sources(daxa PRIVATE ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp)
+            target_link_libraries(daxa PRIVATE SDL3::SDL3)
+            target_include_directories(daxa SYSTEM PUBLIC ${SDL_INCLUDE_DIR})
+        endif()
+    endif()
+
     target_compile_definitions(daxa
         PUBLIC
         DAXA_BUILT_WITH_UTILS_IMGUI=true
-    )
-    target_link_libraries(daxa
-        PUBLIC
-        imgui::imgui
     )
 endif()
 if(DAXA_ENABLE_UTILS_MEM)
@@ -117,6 +158,7 @@ if(DAXA_ENABLE_UTILS_MEM)
     )
 endif()
 if(DAXA_ENABLE_UTILS_PIPELINE_MANAGER_GLSLANG)
+    find_package(glslang CONFIG REQUIRED)
     target_compile_definitions(daxa
         PUBLIC
         DAXA_BUILT_WITH_UTILS_PIPELINE_MANAGER_GLSLANG=true
@@ -151,6 +193,10 @@ if(DAXA_ENABLE_UTILS_TASK_GRAPH)
         DAXA_BUILT_WITH_UTILS_TASK_GRAPH=true
     )
 endif()
+
+find_package(Vulkan REQUIRED)
+
+find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
 target_link_libraries(daxa
     PRIVATE
