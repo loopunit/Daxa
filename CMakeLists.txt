@@ -310,7 +310,7 @@ if (DAXA_ENABLE_INSTALL)
         endif()
 
         install(FILES ${PUBLIC_IMGUI_HEADERS}
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/imgui)
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     endif()
 
     write_basic_package_version_file(
