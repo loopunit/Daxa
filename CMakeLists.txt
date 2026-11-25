@@ -124,8 +124,8 @@ if(DAXA_ENABLE_UTILS_IMGUI)
         target_include_directories(daxa SYSTEM
         PRIVATE
             ${imgui_SOURCE_DIR}
-            ${imgui_SOURCE_DIR}/backends
-            ${Vulkan_INCLUDE_DIRS})
+            ${imgui_SOURCE_DIR}/backends)
+
         if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
             target_compile_options(daxa PRIVATE -Wno-nontrivial-memcall)
         endif()
@@ -295,6 +295,23 @@ if (DAXA_ENABLE_INSTALL)
         NAMESPACE daxa::
         DESTINATION ${INSTALL_CONFIGDIR}
     )
+
+    if(DAXA_ENABLE_UTILS_IMGUI)
+        set(PUBLIC_IMGUI_HEADERS
+            ${imgui_SOURCE_DIR}/imgui.h
+            ${imgui_SOURCE_DIR}/imconfig.h
+            ${imgui_SOURCE_DIR}/imgui_internal.h
+            ${imgui_SOURCE_DIR}/imstb_rectpack.h
+            ${imgui_SOURCE_DIR}/imstb_textedit.h
+            ${imgui_SOURCE_DIR}/imstb_truetype.h)
+
+        if(DAXA_ENABLE_SDL3)
+            list(APPEND PUBLIC_IMGUI_HEADERS ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.h)
+        endif()
+
+        install(FILES ${PUBLIC_IMGUI_HEADERS}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/imgui)
+    endif()
 
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/daxaConfigVersion.cmake
