@@ -21,9 +21,10 @@
                 "DAXA_ENABLE_UTILS_PIPELINE_MANAGER_SLANG": false,
                 "DAXA_ENABLE_UTILS_PIPELINE_MANAGER_SPIRV_VALIDATION": false,
                 "DAXA_ENABLE_UTILS_TASK_GRAPH": true,
-                "DAXA_ENABLE_TESTS": false,
+                "DAXA_ENABLE_TESTS": true,
                 "DAXA_ENABLE_TOOLS": true,
-                "DAXA_ENABLE_SDL3": true,
+                "DAXA_ENABLE_SDL3": false,
+                "DAXA_ENABLE_GLFW": true,
                 "DAXA_ENABLE_STATIC_ANALYSIS": false,
                 "DAXA_FORCE_WAYLAND": true,
                 "DAXA_ENABLE_INSTALL": true

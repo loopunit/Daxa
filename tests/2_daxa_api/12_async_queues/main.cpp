@@ -7,17 +7,18 @@
 #if defined(_WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
 #elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
+// #define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_WAYLAND
 #endif
 #include <GLFW/glfw3native.h>
 
-/// 
+///
 /// DAXA Multiqueue
-/// 
+///
 /// In Vulkan, queues are very verbose
 /// They expose a lot of api surface and implementation options that are rarely if ever used by hardware vendors.
 /// Daxa multiqueue simplifies vulkans multiqueue capabilities to that of the current hardware.
-/// It also simplifies some details like queue resource ownership to drastically simplify the api surface. 
+/// It also simplifies some details like queue resource ownership to drastically simplify the api surface.
 ///
 /// There are at max 8 compute and 2 transfer queues.
 ///   There is only one graphics (the main) queue, as no hardware actually supports async graphics queues.
@@ -26,12 +27,12 @@
 ///   These queues are ensured to be in different queue families.
 ///
 /// Daxa only supports swapchains for the main queue atm. This might change in the future.
-/// 
+///
 /// Daxa does not expose ownership transfers as they are nearly never useful.
 ///   All buffers are multi queue shared.
 ///   Images are default exclusive to the main queue.
 ///   Optionally images are shared across all queues.
-///   There is no way to transfer ownership and as the exclusive ownership is mostly useful for renderpass write compression, 
+///   There is no way to transfer ownership and as the exclusive ownership is mostly useful for renderpass write compression,
 ///   the main queue is the default exlusively owning queue.
 ///
 /// CommandRecorder Types
@@ -71,7 +72,7 @@ namespace tests
     {
         daxa::Instance instance = daxa::create_instance({});
         daxa::Device device = instance.create_device_2(instance.choose_device({}, daxa::DeviceInfo2{}));
-        
+
         daxa::u32 compute_queue_count = device.queue_count(daxa::QueueType::COMPUTE);
         daxa::u32 transfer_queue_count = device.queue_count(daxa::QueueType::TRANSFER);
         std::cout << "Device has " << compute_queue_count << " async compute and " << transfer_queue_count << " async transfer queues.\n";
@@ -81,11 +82,11 @@ namespace tests
         for (daxa::u32 queue = 0; queue < compute_queue_count; ++queue)
         {
             device.queue_wait_idle(daxa::Queue{daxa::QueueType::COMPUTE, queue});
-        }     
+        }
         for (daxa::u32 queue = 0; queue < transfer_queue_count; ++queue)
         {
             device.queue_wait_idle(daxa::Queue{daxa::QueueType::TRANSFER, queue});
-        }   
+        }
     }
 
     void simple_submit_chain()
@@ -105,7 +106,7 @@ namespace tests
         constexpr daxa::u32 initial_value = 42u;
         // Make buffer for a u32[4] array and write some data into the first element
         auto buffer = device.create_buffer(daxa::BufferInfo{.size = sizeof(daxa::u32) * 4, .memory_flags = daxa::MemoryFlagBits::HOST_ACCESS_RANDOM, .name = "buffer"});
-        *device.buffer_host_address_as<daxa::u32>(buffer).value() = initial_value;    
+        *device.buffer_host_address_as<daxa::u32>(buffer).value() = initial_value;
 
         {
             // Copy from index 0 to index 1
@@ -129,7 +130,7 @@ namespace tests
                 .command_lists = std::array{commands},
                 .signal_binary_semaphores = std::array{sema0},
             });
-        }  
+        }
 
         {
             // Copy from index 1 to index 2
@@ -153,8 +154,8 @@ namespace tests
                 .wait_binary_semaphores = std::array{sema0},
                 .signal_binary_semaphores = std::array{sema1},
             });
-        }  
-        
+        }
+
         {
             // Copy from index 2 to index 3
             // Any command recorder type can be used to submit commands to the main queue.
@@ -177,7 +178,7 @@ namespace tests
                 .command_lists = std::array{commands},
                 .wait_binary_semaphores = std::array{sema1},
             });
-        }   
+        }
 
         // The semaphores make sure that the queues submissions are processed in the correct order (transfer0 -> comp0 -> main).
 
@@ -202,11 +203,10 @@ namespace tests
             commands = rec.complete_current_commands();
         }
 
-
         constexpr daxa::u32 initial_value = 42u;
         // Make buffer for a u32[4] array and write some data into the first element
         auto buffer = device.create_buffer(daxa::BufferInfo{.size = sizeof(daxa::u32) * 4, .memory_flags = daxa::MemoryFlagBits::HOST_ACCESS_RANDOM, .name = "buffer"});
-        *device.buffer_host_address_as<daxa::u32>(buffer).value() = initial_value;    
+        *device.buffer_host_address_as<daxa::u32>(buffer).value() = initial_value;
 
         // Instead of semaphores, this test is using submit indices to synchronize queues
         std::pair<daxa::Queue, daxa::u64> transfer_submit_index = {};
@@ -231,8 +231,8 @@ namespace tests
                 .queue = daxa::QUEUE_TRANSFER_0,
                 .command_lists = std::array{commands},
             });
-            transfer_submit_index = { daxa::QUEUE_TRANSFER_0, device.latest_queue_submit_index(daxa::QUEUE_TRANSFER_0) };
-        }  
+            transfer_submit_index = {daxa::QUEUE_TRANSFER_0, device.latest_queue_submit_index(daxa::QUEUE_TRANSFER_0)};
+        }
 
         // Instead of semaphores, this test is using submit indices to synchronize queues
         std::pair<daxa::Queue, daxa::u64> comp1_submit_index = {};
@@ -257,9 +257,9 @@ namespace tests
                 .command_lists = std::array{commands},
                 .wait_queue_submit_indices = std::array{transfer_submit_index},
             });
-            comp1_submit_index = { daxa::QUEUE_COMPUTE_1, device.latest_queue_submit_index(daxa::QUEUE_COMPUTE_1) };
-        }  
-        
+            comp1_submit_index = {daxa::QUEUE_COMPUTE_1, device.latest_queue_submit_index(daxa::QUEUE_COMPUTE_1)};
+        }
+
         // Instead of semaphores, this test is using submit indices to synchronize queues
         std::pair<daxa::Queue, daxa::u64> mainq_submit_index = {};
         {
@@ -284,8 +284,8 @@ namespace tests
                 .command_lists = std::array{commands},
                 .wait_queue_submit_indices = std::array{comp1_submit_index},
             });
-            mainq_submit_index = { daxa::QUEUE_MAIN, device.latest_queue_submit_index(daxa::QUEUE_MAIN) };
-        }   
+            mainq_submit_index = {daxa::QUEUE_MAIN, device.latest_queue_submit_index(daxa::QUEUE_MAIN)};
+        }
 
         // The submit index waits make sure that the queues submissions are processed in the correct order (transfer0 -> comp0 -> main).
 
@@ -313,7 +313,7 @@ namespace tests
         struct DrawTask : DrawTri::Task
         {
             AttachmentViews views = {};
-            daxa::RasterPipeline* pipeline = {};
+            daxa::RasterPipeline * pipeline = {};
             void callback(daxa::TaskInterface ti)
             {
                 daxa::ImageInfo color_img_info = ti.info(AT.render_target).value();
@@ -479,7 +479,7 @@ namespace tests
                     auto rec = device.create_command_recorder({daxa::QueueType::COMPUTE});
                     auto cmds = rec.complete_current_commands();
                     device.submit_commands({
-                        .queue = daxa::QUEUE_COMPUTE_0, 
+                        .queue = daxa::QUEUE_COMPUTE_0,
                         .command_lists = std::array{cmds},
                     });
                 }

@@ -122,20 +122,20 @@ if(DAXA_ENABLE_UTILS_IMGUI)
             ${imgui_SOURCE_DIR}/imgui_tables.cpp)
 
         target_include_directories(daxa SYSTEM
-        PRIVATE
-            ${imgui_SOURCE_DIR}
-            ${imgui_SOURCE_DIR}/backends)
+        PUBLIC
+            $<BUILD_INTERFACE:${imgui_SOURCE_DIR}>
+            $<BUILD_INTERFACE:${imgui_SOURCE_DIR}/backends>
+        )
 
         if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
             target_compile_options(daxa PRIVATE -Wno-nontrivial-memcall)
         endif()
 
         if(DAXA_ENABLE_GLFW)
-            if(TARGET glfw)
-                target_sources(daxa PRIVATE ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
-                target_link_libraries(daxa PRIVATE glfw)
-                target_include_directories(daxa SYSTEM PUBLIC ${glfw_SOURCE_DIR}/include)
-            endif()
+            find_package(glfw3 REQUIRED)
+            target_sources(daxa PRIVATE ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
+            target_link_libraries(daxa PRIVATE glfw)
+            target_include_directories(daxa SYSTEM PUBLIC ${glfw_SOURCE_DIR}/include)
         endif()
 
         if(DAXA_ENABLE_SDL3)
@@ -307,6 +307,10 @@ if (DAXA_ENABLE_INSTALL)
 
         if(DAXA_ENABLE_SDL3)
             list(APPEND PUBLIC_IMGUI_HEADERS ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.h)
+        endif()
+
+        if(DAXA_ENABLE_GLFW)
+            list(APPEND PUBLIC_IMGUI_HEADERS ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h)
         endif()
 
         install(FILES ${PUBLIC_IMGUI_HEADERS}

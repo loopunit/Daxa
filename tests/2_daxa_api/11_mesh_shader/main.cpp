@@ -7,28 +7,28 @@
 #if defined(_WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
 #elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
+// #define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_WAYLAND
 #endif
 #include <GLFW/glfw3native.h>
 
 auto get_native_window_info(GLFWwindow * glfw_window_ptr) -> daxa::NativeWindowInfo
 {
 #if defined(_WIN32)
-    return daxa::NativeWindowInfoWin32{ glfwGetWin32Window(glfw_window_ptr) };
+    return daxa::NativeWindowInfoWin32{glfwGetWin32Window(glfw_window_ptr)};
 #elif defined(__linux__)
     switch (glfwGetPlatform())
     {
     case GLFW_PLATFORM_WAYLAND:
-        return daxa::NativeWindowInfoWayland {
+        return daxa::NativeWindowInfoWayland{
             .display = glfwGetWaylandDisplay(),
             .surface = glfwGetWaylandWindow(glfw_window_ptr),
-            .width   = size_x,
-            .height  = size_y,
+            .width = size_x,
+            .height = size_y,
         };
     default:
-        return daxa::NativeWindowInfoXlib {
-            .window = reinterpret_cast<void*>(glfwGetX11Window(glfw_window_ptr))
-        };
+        return daxa::NativeWindowInfoXlib{
+            .window = reinterpret_cast<void *>(glfwGetX11Window(glfw_window_ptr))};
     }
 #endif
 }
@@ -83,7 +83,7 @@ auto main() -> int
         .present_mode = daxa::PresentMode::FIFO,
         .surface_format = device.choose_swapchain_surface_format({
             .native_window_info = native_window_info,
-            .preferred_formats = std::array{daxa::SurfaceFormat{ .format = daxa::Format::B8G8R8A8_UNORM }},
+            .preferred_formats = std::array{daxa::SurfaceFormat{.format = daxa::Format::B8G8R8A8_UNORM}},
         }),
         .image_usage = daxa::ImageUsageFlagBits::TRANSFER_DST,
         .name = "my swapchain",
@@ -152,11 +152,12 @@ auto main() -> int
 
     // And a task to draw to the screen
     loop_task_graph.add_task(daxa::HeadTask<DrawTri::Info>()
-        .head_views({
-            .resolve_target = swapchain_tview,
-            .render_target = trender_image.view(),
-        })
-        .executes([=, pipeline_ptr = &pipeline](daxa::TaskInterface ti){
+                                 .head_views({
+                                     .resolve_target = swapchain_tview,
+                                     .render_target = trender_image.view(),
+                                 })
+                                 .executes([=, pipeline_ptr = &pipeline](daxa::TaskInterface ti)
+                                           {
             using namespace DrawTri;
             daxa::ImageInfo color_img_info = ti.info(AT.render_target).value();
             auto const size_x = color_img_info.size.x;
@@ -178,12 +179,11 @@ auto main() -> int
             render_recorder.set_pipeline(**pipeline_ptr);
 
             render_recorder.draw_mesh_tasks_indirect({
-                .indirect_buffer = indirect_dispatch_buffer, 
+                .indirect_buffer = indirect_dispatch_buffer,
                 .draw_count = 1u,
                 .stride = 12u,
             });
-            ti.recorder = std::move(render_recorder).end_renderpass();
-        }));
+            ti.recorder = std::move(render_recorder).end_renderpass(); }));
 
     loop_task_graph.submit({});
     loop_task_graph.present({});

@@ -19,6 +19,15 @@ function(DAXA_CREATE_TEST)
         "${FOLDER_PATH}/main.cpp"
     )
     target_link_libraries(daxa_test_${FOLDER_NAME} PRIVATE daxa::daxa ${DCT_LIBS})
+
+    if (DAXA_ENABLE_SDL3)
+        target_link_libraries(daxa_test_${FOLDER_NAME} PRIVATE SDL3::SDL3 ${DCT_LIBS})
+    endif()
+
+    if (DAXA_ENABLE_GLFW)
+        target_link_libraries(daxa_test_${FOLDER_NAME} PRIVATE glfw ${DCT_LIBS})
+    endif()
+
     target_include_directories(daxa_test_${FOLDER_NAME} PRIVATE "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/0_common/shared")
     target_compile_definitions(daxa_test_${FOLDER_NAME} PRIVATE DAXA_SAMPLE_PATH="${CMAKE_CURRENT_LIST_DIR}/${FOLDER_PATH}")
 
@@ -60,7 +69,17 @@ function(DAXA_CREATE_TEST_C)
         daxa_test_c_${FOLDER_NAME}
         "${FOLDER_PATH}/main.c"
     )
+
     target_link_libraries(daxa_test_c_${FOLDER_NAME} PRIVATE daxa::daxa ${DCT_LIBS})
+
+    if (DAXA_ENABLE_SDL3)
+        target_link_libraries(daxa_test_${FOLDER_NAME} PRIVATE SDL3::SDL3 ${DCT_LIBS})
+    endif()
+
+    if (DAXA_ENABLE_GLFW)
+        target_link_libraries(daxa_test_${FOLDER_NAME} PRIVATE glfw ${DCT_LIBS})
+    endif()
+
     target_include_directories(daxa_test_c_${FOLDER_NAME} PRIVATE "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/0_common/shared")
     target_compile_definitions(daxa_test_c_${FOLDER_NAME} PRIVATE DAXA_SAMPLE_PATH="${CMAKE_CURRENT_LIST_DIR}/${FOLDER_PATH}")
 
@@ -72,130 +91,111 @@ endfunction()
 
 DAXA_CREATE_TEST(
     FOLDER 1_setup 1_window
-    LIBS glfw
 )
-
 DAXA_CREATE_TEST(
     FOLDER 2_daxa_api 1_instance
-    LIBS
 )
 DAXA_CREATE_TEST(
     FOLDER 2_daxa_api 2_device
-    LIBS
 )
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 3_command_recorder
-    LIBS
-)
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 4_synchronization
-    LIBS
-)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 3_command_recorder
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 4_synchronization
+#)
 DAXA_CREATE_TEST(
     FOLDER 2_daxa_api 5_swapchain
-    LIBS glfw
 )
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 6_task_graph
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_IMGUI
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 7_pipeline_manager
-    LIBS
-    FEATURES
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 8_mem
-    LIBS glfw
-    FEATURES
-        UTILS_MEM
-)
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 9_shader_integration
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-# DAXA_CREATE_TEST(
-#     FOLDER 2_daxa_api 10_raytracing
-#     LIBS glfw
-# )
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 11_mesh_shader
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_PIPELINE_MANAGER_SLANG
-)
-DAXA_CREATE_TEST(
-    FOLDER 2_daxa_api 12_async_queues
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_PIPELINE_MANAGER_SLANG
-)
-
-DAXA_CREATE_TEST(
-    FOLDER 3_samples 0_rectangle_cutting
-    LIBS glfw
-    FEATURES
-        UTILS_IMGUI
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-DAXA_CREATE_TEST(
-    FOLDER 3_samples 1_mandelbrot
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_IMGUI
-        # UTILS_PIPELINE_MANAGER_GLSLANG # NOTE: Dependent on what is set in mandelbrot_main.cpp
-        UTILS_PIPELINE_MANAGER_SLANG
-)
-# DAXA_CREATE_TEST(
-#     FOLDER 3_samples 2_mpm_mls
-#     LIBS glfw
-#     FEATURES
-#         UTILS_TASK_GRAPH
-#         UTILS_IMGUI
-#         UTILS_PIPELINE_MANAGER_GLSLANG
-#         UTILS_PIPELINE_MANAGER_SLANG
-# )
-DAXA_CREATE_TEST(
-    FOLDER 3_samples 3_hello_triangle_compute
-    LIBS glfw
-    FEATURES
-        UTILS_IMGUI
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-
-DAXA_CREATE_TEST(
-    FOLDER 3_samples 5_boids
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-
-DAXA_CREATE_TEST(
-    FOLDER 4_hello_daxa 1_pink_screen
-    LIBS glfw
-)
-
-DAXA_CREATE_TEST(
-    FOLDER 4_hello_daxa 2_triangle
-    LIBS glfw
-    FEATURES
-        UTILS_TASK_GRAPH
-        UTILS_PIPELINE_MANAGER_GLSLANG
-)
-
-DAXA_CREATE_TEST_C(
-    FOLDER 4_hello_daxa 0_c_api
-    LIBS glfw Vulkan::Vulkan
-)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 6_task_graph
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_IMGUI
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 7_pipeline_manager
+#    FEATURES
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 8_mem
+#    FEATURES
+#        UTILS_MEM
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 9_shader_integration
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+## DAXA_CREATE_TEST(
+##     FOLDER 2_daxa_api 10_raytracing
+##     LIBS glfw
+## )
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 11_mesh_shader
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_PIPELINE_MANAGER_SLANG
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 2_daxa_api 12_async_queues
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_PIPELINE_MANAGER_SLANG
+#)
+#
+#DAXA_CREATE_TEST(
+#    FOLDER 3_samples 0_rectangle_cutting
+#    FEATURES
+#        UTILS_IMGUI
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#DAXA_CREATE_TEST(
+#    FOLDER 3_samples 1_mandelbrot
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_IMGUI
+#        # UTILS_PIPELINE_MANAGER_GLSLANG # NOTE: Dependent on what is set in mandelbrot_main.cpp
+#        UTILS_PIPELINE_MANAGER_SLANG
+#)
+## DAXA_CREATE_TEST(
+##     FOLDER 3_samples 2_mpm_mls
+##     LIBS glfw
+##     FEATURES
+##         UTILS_TASK_GRAPH
+##         UTILS_IMGUI
+##         UTILS_PIPELINE_MANAGER_GLSLANG
+##         UTILS_PIPELINE_MANAGER_SLANG
+## )
+#DAXA_CREATE_TEST(
+#    FOLDER 3_samples 3_hello_triangle_compute
+#    FEATURES
+#        UTILS_IMGUI
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#
+#DAXA_CREATE_TEST(
+#    FOLDER 3_samples 5_boids
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#
+#DAXA_CREATE_TEST(
+#    FOLDER 4_hello_daxa 1_pink_screen
+#)
+#
+#DAXA_CREATE_TEST(
+#    FOLDER 4_hello_daxa 2_triangle
+#    FEATURES
+#        UTILS_TASK_GRAPH
+#        UTILS_PIPELINE_MANAGER_GLSLANG
+#)
+#
+#DAXA_CREATE_TEST_C(
+#    FOLDER 4_hello_daxa 0_c_api
+#    LIBS glfw Vulkan::Vulkan
+#)

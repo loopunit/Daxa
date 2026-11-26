@@ -4,7 +4,7 @@
 #if defined(_WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
 #elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
+// #define GLFW_EXPOSE_NATIVE_X11
 #define GLFW_EXPOSE_NATIVE_WAYLAND
 #endif
 #include <GLFW/glfw3native.h>
@@ -17,16 +17,15 @@ auto get_native_window_info(GLFWwindow * glfw_window_ptr, daxa::u32 width, daxa:
     switch (glfwGetPlatform())
     {
     case GLFW_PLATFORM_WAYLAND:
-        return daxa::NativeWindowInfoWayland {
+        return daxa::NativeWindowInfoWayland{
             .display = glfwGetWaylandDisplay(),
             .surface = glfwGetWaylandWindow(glfw_window_ptr),
-            .width   = width,
-            .height  = height,
+            .width = width,
+            .height = height,
         };
     default:
-        return daxa::NativeWindowInfoXlib {
-            .window = reinterpret_cast<void*>(glfwGetX11Window(glfw_window_ptr))
-        };
+        return daxa::NativeWindowInfoXlib{
+            .window = reinterpret_cast<void *>(glfwGetX11Window(glfw_window_ptr))};
     }
 #endif
 }
@@ -199,9 +198,9 @@ auto main() -> int
         auto const & acquire_semaphore = swapchain.current_acquire_semaphore();
         auto const & present_semaphore = swapchain.current_present_semaphore();
         device.submit_commands(daxa::CommandSubmitInfo{
-            .command_lists = std::array{executalbe_commands},           
-            .wait_binary_semaphores = std::array{acquire_semaphore},    
-            .signal_binary_semaphores = std::array{present_semaphore},  
+            .command_lists = std::array{executalbe_commands},
+            .wait_binary_semaphores = std::array{acquire_semaphore},
+            .signal_binary_semaphores = std::array{present_semaphore},
             .signal_timeline_semaphores = std::array{swapchain.current_timeline_pair()},
         });
         device.present_frame({
